@@ -17,7 +17,17 @@ python3 scripts/scan_folder.py --folder "/absolute/path/to/work"
 
 This creates `.indesign-portfolio/inventory.json` and `coverage-ledger.json` in that folder; use `--output` to place both beside an inventory in a writable workspace when the source is read-only. `--ledger-output` can place the ledger elsewhere. Repeat scans preserve reviewed ledger decisions. The scanner records every non-hidden file, provisional folder groups, metadata, and bounded text from common documents. PDF text extraction and media metadata use `pdftotext` and `ffprobe` when available. Their absence is a cue for agent review, not a reason to omit those files.
 
-Read the inventory and inspect **every proposed group**. Open representative images and PDFs; sample relevant video frames and audio/transcripts using available tools. Read source documents in context. Identify distinct projects, variants, drafts, final exports, credits, dates, and usable visual assets. Fill in the generated coverage ledger: map each file to a project and mark it `selected`, `supporting`, `duplicate`, `excluded`, or `unreadable`, with a reason for exclusions and limitations. No `unreviewed` entries may remain before delivery. Folder names and timestamps are clues, not proof of a role, result, or publication. If a source cannot be read, record that limitation. Choose the strongest work for the intended audience; account for the rest in the ledger. If the audience is unspecified, create a broad selected-work portfolio based on the evidence.
+Prepare media paths and video frames:
+
+```bash
+python3 scripts/media_previews.py --inventory "/absolute/path/to/work/.indesign-portfolio/inventory.json"
+```
+
+`preview-manifest.json` points to original raster images and sampled frames across each video. `ffmpeg` is optional; when absent, open videos in an available player or editor. A preview is an aid to inspection, not a content analysis result. Use `--output-dir` for previews when the inventory directory is read-only.
+
+Read the inventory and inspect **every file**, including every image or design as an image, every PDF page, and every video's sampled frames plus playback for motion, pacing, titles, and transitions. Inspect more frames around cuts or unclear sequences. Listen to or transcribe audio when it carries relevant work; do not infer its content from a waveform or filename. Open native designs such as `.indd`, `.psd`, and `.ai` in a compatible app or inspect a faithful export; if neither is possible, mark them unreadable. Read source documents in context. Identify distinct projects, variants, drafts, final exports, credits, dates, and usable visual assets. The agent must interpret the actual visual or audiovisual content; the scanner and preview script only provide metadata and viewing material.
+
+Fill in the generated coverage ledger: map each file to a project and mark it `selected`, `supporting`, `duplicate`, `excluded`, or `unreadable`, with a reason for exclusions and limitations. For each image, video, audio file, PDF, or native design, set `inspection_status` to `viewed` and write a specific `inspection_note` after review. If the content cannot be inspected, set both inspection and decision status to `unreadable` with the limitation in the note and reason. No `unreviewed` or `pending` entries may remain before delivery. Folder names and timestamps are clues, not proof of a role, result, or publication. Choose the strongest work for the intended audience; account for the rest in the ledger. If the audience is unspecified, create a broad selected-work portfolio based on the evidence.
 
 Draft concise case studies and a visual direction from the sources. Distinguish verified facts from editorial wording. Do not invent results, client names, credits, or contact details. If identity is unavailable, use a neutral title and profile name such as “Selected Work,” a factual headline like “Creative Portfolio,” and flag the missing detail for review; do not block the draft. For reference PDFs or images, inspect the actual pages and derive page size, margins, palette, type hierarchy, and image rhythm. A reference guides design; it does not guarantee pixel-identical reconstruction.
 
@@ -34,6 +44,8 @@ The script does not load Laya without `--ambiguous`. Laya is optional and is nev
 ## Build from the analysis
 
 Save the edited content as `portfolio.json` using [the example](examples/portfolio.json). Record source evidence and any unresolved facts in the coverage ledger; do not put speculative claims in the final copy. Image paths may be relative to the JSON file; the CLI resolves them to absolute paths. The standard builder makes a cover, an about/index page, one case-study page per project, and an optional detail/gallery page when a project has images or facts. It leaves every text frame and placed image editable in InDesign. For a different page architecture, adapt the JSX builder deliberately rather than forcing content into an unsuitable template.
+
+Use exportable stills or faithful frame grabs from selected videos and compatible visual exports from native design files as placed InDesign assets. Preserve the original work files and link the portfolio to the approved stills/exports. Do not describe a video's story or outcome based only on sampled frames.
 
 Before building, verify full folder coverage (pass the actual scan output paths when `--output` was used):
 

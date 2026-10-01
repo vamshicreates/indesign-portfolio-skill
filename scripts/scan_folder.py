@@ -212,6 +212,8 @@ def coverage_ledger(inventory: dict) -> dict:
                 "project": "",
                 "status": "unreviewed",
                 "reason": "",
+                "inspection_status": "pending",
+                "inspection_note": "",
             }
             for item in inventory["files"]
         ],
@@ -230,7 +232,8 @@ def merge_coverage_ledger(fresh: dict, ledger_path: Path) -> dict:
         for item in fresh["decisions"]:
             old = reviewed.get(item["relative_path"])
             if old and old.get("status") in fresh["status_values"]:
-                item.update({key: old.get(key, "") for key in ("project", "status", "reason")})
+                item.update({key: old.get(key, "") for key in
+                             ("project", "status", "reason", "inspection_status", "inspection_note")})
         return fresh
     except (OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
         raise ValueError(f"Cannot preserve existing coverage ledger: {exc}") from exc

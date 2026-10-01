@@ -12,6 +12,9 @@ from pathlib import Path
 def check(inventory: dict, ledger: dict) -> list[str]:
     errors = []
     expected = {item["relative_path"] for item in inventory["files"]}
+    visual_kinds = {item["relative_path"]: item["kind"] for item in inventory["files"]
+                    if item.get("kind") in {"image", "video", "audio", "native_project"}
+                    or item.get("extension") == ".pdf"}
     decisions = ledger.get("decisions", [])
     actual = [item.get("relative_path") for item in decisions]
     if inventory.get("source_folder") != ledger.get("source_folder"):
@@ -32,6 +35,13 @@ def check(inventory: dict, ledger: dict) -> list[str]:
             errors.append(f"Project required: {path}")
         if status in {"duplicate", "excluded", "unreadable"} and not str(item.get("reason", "")).strip():
             errors.append(f"Reason required: {path}")
+        if path in visual_kinds:
+            inspection = item.get("inspection_status")
+            note = str(item.get("inspection_note", "")).strip()
+            if inspection not in {"viewed", "unreadable"} or not note:
+                errors.append(f"Media inspection and note required: {path}")
+            if inspection == "unreadable" and status != "unreadable":
+                errors.append(f"Unreadable media must have unreadable decision: {path}")
     return errors
 
 

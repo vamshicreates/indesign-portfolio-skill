@@ -8,12 +8,13 @@ An agent skill and Adobe InDesign builder for a repeatable, editable portfolio. 
 - Editable InDesign text and placed image frames.
 - A PDF for review and an issue report for fonts, images, and overset text.
 - A file coverage ledger so every scanned work is included, excluded, or flagged for review.
+- A media preview manifest with direct image paths and sampled video frames for visual review.
 
 ## Requirements
 
 - Python 3.9 or newer for scanning, validation, and runner generation.
 - Adobe InDesign for building the `.indd` and PDF. The CLI runs it on macOS and Windows.
-- Optional: `pdftotext` for PDF text, `ffprobe` for media metadata, and `laya` on Python 3.10+ for rare ambiguous decisions. The skill works without these optional tools.
+- Optional: `pdftotext` for PDF text, `ffmpeg`/`ffprobe` for video frames and metadata, and `laya` on Python 3.10+ for rare ambiguous decisions. The skill works without these optional tools when the agent can inspect media in native apps.
 
 ## Quick start
 
@@ -22,7 +23,10 @@ An agent skill and Adobe InDesign builder for a repeatable, editable portfolio. 
 
    ```bash
    python3 scripts/scan_folder.py --folder /path/to/my-work-folder
+   python3 scripts/media_previews.py --inventory /path/to/my-work-folder/.indesign-portfolio/inventory.json
    ```
+
+   The agent opens every image and design, reviews every PDF page, and watches or samples each video across its timeline. It records what it actually saw or heard in the coverage ledger. File names and metadata alone are insufficient.
 
 3. Validate and prepare the script:
 
