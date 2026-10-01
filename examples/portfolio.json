@@ -1,0 +1,36 @@
+{
+  "title": "Selected Work",
+  "page": {"width_pt": 595.28, "height_pt": 841.89, "margin_pt": 48},
+  "theme": {
+    "background": "#F7F5F0",
+    "text": "#17202A",
+    "accent": "#B85839",
+    "muted": "#66717B",
+    "font_regular": "Arial",
+    "font_bold": "Arial Bold"
+  },
+  "profile": {
+    "name": "Your Name",
+    "headline": "Creative Director and Filmmaker",
+    "bio": "Replace this with a concise introduction focused on your strongest work and the roles you want next.",
+    "contact": ["you@example.com", "yourwebsite.com"],
+    "hero_image": ""
+  },
+  "projects": [
+    {
+      "title": "Example Project",
+      "subtitle": "A short description of the project",
+      "year": "2026",
+      "role": "Director",
+      "summary": "Describe the problem, your contribution, the creative choices, and the outcome in a concise paragraph.",
+      "hero_image": "",
+      "images": [],
+      "facts": ["Replace this with a verified outcome or production detail."]
+    }
+  ],
+  "output": {
+    "indd": "../output/portfolio.indd",
+    "pdf": "../output/portfolio.pdf",
+    "report": "../output/portfolio-report.json"
+  }
+}
