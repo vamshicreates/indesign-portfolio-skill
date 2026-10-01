@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import platform
 import re
@@ -151,6 +152,17 @@ def find_indesign() -> Path | None:
     return next(iter(sorted(Path("/Applications").glob("Adobe InDesign*/Adobe InDesign*.app"), reverse=True)), None)
 
 
+def windows_com_registered() -> bool:
+    if platform.system() != "Windows":
+        return False
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, "InDesign.Application"):
+            return True
+    except (OSError, ImportError):
+        return False
+
+
 def prepare(spec: dict, runner: Path, *, force: bool = False) -> Path:
     runner = runner.expanduser().resolve()
     if runner.exists() and not force:
@@ -181,6 +193,27 @@ def run_mac(runner: Path) -> None:
         raise SpecError((completed.stderr or completed.stdout).strip() or "InDesign script failed")
 
 
+def windows_powershell_script(runner: Path) -> str:
+    literal_path = str(runner).replace("'", "''")
+    return (
+        "$ErrorActionPreference = 'Stop'\n"
+        "$app = New-Object -ComObject InDesign.Application\n"
+        f"$jsx = Get-Content -LiteralPath '{literal_path}' -Raw -Encoding UTF8\n"
+        "$app.DoScript($jsx, 1246973031) | Out-Null\n"
+    )
+
+
+def run_windows(runner: Path) -> None:
+    script = windows_powershell_script(runner)
+    encoded = base64.b64encode(script.encode("utf-16le")).decode("ascii")
+    completed = subprocess.run(
+        ["powershell.exe", "-NoProfile", "-NonInteractive", "-STA", "-EncodedCommand", encoded],
+        capture_output=True, text=True, timeout=300,
+    )
+    if completed.returncode:
+        raise SpecError((completed.stderr or completed.stdout).strip() or "InDesign COM execution failed")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=["status", "validate", "prepare", "run"])
@@ -190,7 +223,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.command == "status":
-            print(json.dumps({"platform": platform.system(), "indesign_app": str(find_indesign()) if find_indesign() else None}))
+            system = platform.system()
+            print(json.dumps({"platform": system, "indesign_app": str(find_indesign()) if system == "Darwin" and find_indesign() else None,
+                              "windows_com_registered": windows_com_registered() if system == "Windows" else None}))
             return 0
         if not args.spec:
             raise SpecError("--spec is required")
@@ -203,12 +238,17 @@ def main(argv: list[str] | None = None) -> int:
         runner = prepare(spec, runner, force=args.force)
         print(json.dumps({"runner": str(runner), "output": spec["output"]}))
         if args.command == "run":
-            if platform.system() != "Darwin":
-                raise SpecError("Automatic execution currently supports macOS. On Windows, run the generated JSX from InDesign's Scripts panel.")
-            run_mac(runner)
             report = Path(spec["output"]["report"])
-            if not report.is_file():
-                raise SpecError("InDesign returned without a report. Check the Scripts panel for an error.")
+            before = report.stat().st_mtime_ns if report.is_file() else None
+            system = platform.system()
+            if system == "Darwin":
+                run_mac(runner)
+            elif system == "Windows":
+                run_windows(runner)
+            else:
+                raise SpecError("Automatic execution supports macOS and Windows; run the JSX manually on this platform.")
+            if not report.is_file() or (before is not None and report.stat().st_mtime_ns == before):
+                raise SpecError("InDesign returned without a fresh report. Check the Scripts panel for an error.")
             result = json.loads(report.read_text(encoding="utf-8"))
             if result.get("ok"):
                 for kind in ("indd", "pdf"):

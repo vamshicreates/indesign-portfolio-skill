@@ -5,7 +5,7 @@ from pathlib import Path
 from sys import path as sys_path
 
 sys_path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from portfolio_cli import SpecError, load_spec, prepare  # noqa: E402
+from portfolio_cli import SpecError, load_spec, prepare, windows_powershell_script  # noqa: E402
 
 
 class PortfolioCliTests(unittest.TestCase):
@@ -52,6 +52,12 @@ class PortfolioCliTests(unittest.TestCase):
         self.data["output"]["indd"] = "out/folio.pdf"
         with self.assertRaisesRegex(SpecError, "Output paths"):
             self.load()
+
+    def test_windows_runner_uses_com_and_quotes_paths(self):
+        command = windows_powershell_script(Path("C:/My Work/O'Brien/portfolio-build.jsx"))
+        self.assertIn("New-Object -ComObject InDesign.Application", command)
+        self.assertIn("O''Brien", command)
+        self.assertIn("$app.DoScript($jsx, 1246973031)", command)
 
 
 if __name__ == "__main__":
